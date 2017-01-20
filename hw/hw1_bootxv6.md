@@ -1,5 +1,5 @@
 #What's on the stack?
-fdsa
+
 ###  At breakpoint 0x0010000c, the stack looks like this:
 ```
 
@@ -52,7 +52,8 @@ We then update `%ebp` to point to the top of the stack. By updating %ebp, we can
 ```
 Three more registers are saved in the next few lines of code onto the stack. This is done so that the function can use these registers, and the compiler has a copy of the registers' state before this function was called.
 
-The last line, `sub $0xc,%esp` is an interesting one. Here, we are subtracting 12 from the stack pointer. The following shows the stack before and after executing `7d41`
+The last line, `sub $0xc,%esp` is an interesting one. Here, we are subtracting 12 from the stack pointer. The following shows the stack before and after executing `7d41`  
+
 ``` ## Before
 
 (gdb) si
@@ -73,12 +74,16 @@ The last line, `sub $0xc,%esp` is an interesting one. Here, we are subtracting 1
 0x00007d44 in ?? ()
 (gdb) x/24x $esp
 0x7be0:	0x00000000	0x00000000	0x00000000	0x00000000
+
 0x7bf0:	0x00000000	0x00000000	0x00000000	0x00007c4d
+
 0x7c00:	0x8ec031fa	0x8ec08ed8	0xa864e4d0	0xb0fa7502
 0x7c10:	0xe464e6d1	0x7502a864	0xe6dfb0fa	0x16010f60
 0x7c20:	0x200f7c78	0xc88366c0	0xc0220f01	0x087c31ea
 0x7c30:	0x10b86600	0x8ed88e00	0x66d08ec0	0x8e0000b8
 ```
+
+
 Given that a difference of 1 results in a 1 byte difference in the memory address that the stack pointer is pointing to, subtracting 12 results in 12 bytes of space (or 3 4-byte chunks) being allocated on the stack. This is space that is allocated for local variables for the function.
 
 ### Call that changes eip to 0x100000c
