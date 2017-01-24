@@ -61,8 +61,9 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
-    //fprintf(stderr, "exec not implemented\n");
+    //from man 3 exec: int execv(const char *path, char *const argv[]);
     execv(ecmd->argv[0], ecmd->argv); 
+    fprintf(stderr, "exec not implemented\n");
     break;
 
   case '>':
