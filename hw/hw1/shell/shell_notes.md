@@ -348,3 +348,8 @@ x.txt
       7       7      53
 
 ```
+
+## Resources consulted
+[Blog post on shell](https://jiyou.github.io/blog/2016/10/05/mit.6.828/MIT-6-828-JOS%E8%AF%BE%E7%A8%8B1%EF%BC%9AHW-Shell/)
+[Priceton lecture on pipes](https://www.cs.princeton.edu/courses/archive/fall04/cos217/lectures/21pipes.pdf)
+[Stackoverflow on unix piping](http://stackoverflow.com/questions/2589906/unix-piping-using-fork-and-dup)
