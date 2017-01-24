@@ -48,6 +48,9 @@ runcmd(struct cmd *cmd)
   struct execcmd *ecmd;
   struct pipecmd *pcmd;
   struct redircmd *rcmd;
+  int fd = 0;
+  int pipefd[2];
+  int result = 0;
 
   if(cmd == 0)
     exit(0);
@@ -62,23 +65,45 @@ runcmd(struct cmd *cmd)
     if(ecmd->argv[0] == 0)
       exit(0);
     //from man 3 exec: int execv(const char *path, char *const argv[]);
-    execv(ecmd->argv[0], ecmd->argv); 
+    execvp(ecmd->argv[0], ecmd->argv); 
     fprintf(stderr, "exec not implemented\n");
     break;
 
   case '>':
   case '<':
     rcmd = (struct redircmd*)cmd;
-    fprintf(stderr, "redir not implemented\n");
-    // Your code here ...
+    close(rcmd->fd);
+    if(cmd->type == '>'){
+	fd = open(rcmd->file , rcmd->mode, S_IRWXU);
+    }else{
+	fd = open(rcmd->file , rcmd->mode);
+    }
+
+    if(fd < 0){
+	fprintf(stderr, "failed to open file for redirection");
+	exit(1);
+    }
     runcmd(rcmd->cmd);
     break;
 
   case '|':
     pcmd = (struct pipecmd*)cmd;
-    fprintf(stderr, "pipe not implemented\n");
-    // Your code here ...
-    break;
+    result = pipe(pipefd); // pipefd is an array that will have two file descriptors referring to the ends of the pipe
+    if (result < 0 ){
+    	fprintf(stderr, "pip sys call did not complete");
+	exit(1);
+    }
+    if(fork1() == 0){ //child executes left
+	close(pipefd[0]); //close input
+	dup2(pipefd[1], STDOUT_FILENO ); //copy output
+	close(pipefd[1]); //close old output
+	runcmd(pcmd->left);
+    }else{ //parent executes right
+    	close(pipefd[1]); //close output
+	dup2(pipefd[0], STDIN_FILENO); // copy input
+        close(pipefd[0]); // close old input
+        runcmd(pcmd->right); 
+    }	
   }    
   exit(0);
 }
