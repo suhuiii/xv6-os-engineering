@@ -1,7 +1,7 @@
 #Lab 1: Booting a PC
 
 ## Deciphering info reg
-* while not in the lab, needed to figure out what's what, so here goes *
+_while not in the lab, needed to figure out what's what, so here goes_
 ```
 (gdb) info reg gives
 * general purpose register *  
@@ -120,7 +120,7 @@ what can we tell from here?
 * The first instruction is a jmp instruction which jumps to CS = `0xF000` and IP = `0xE05B`
 
 how does the PC know to get to `0xffff0`?  
-in short, that address is calculated by using the CS and IP values of `0xf000` and `0xfff0` using the formula * physical address =  16 \* segment + offset. * This gives `0xffff0` which is 16 bits before the end of the BIOS. This is known as the **COLD RESET VECTOR** 
+in short, that address is calculated by using the CS and IP values of `0xf000` and `0xfff0` using the formula _physical address =  16 \* segment + offset._ This gives `0xffff0` which is 16 bits before the end of the BIOS. This is known as the **COLD RESET VECTOR** 
 
 The first instruction is a jump, and we can see from the CS:IP values that it will jump to instruction `0xFE05B`, which is earlier in the BIOS.
 
@@ -132,7 +132,7 @@ Executing the next instruction will help us verify if that is true:
 ``` 
 
 > Exercise 2
-Use GDB's si (Step Instruction) command to trace into the ROM BIOS for a few more instructions, and try to guess what it might be doing. You might want to look at Phil Storrs I / O Ports Description, as well as other materials on The 6.828 reference materials page. No need to figure out all the details - just the general idea of ​​what the BIOS is doing first.
+Use GDB's si (Step Instruction) command to trace into the ROM BIOS for a few more instructions, and try to guess what it might be doing. You might want to look at Phil Storrs I / O Ports Description, as well as other materials on The 6.828 reference materials page. No need to figure out all the details - just the general idea of what the BIOS is doing first.
 
 The next couple of instructions are :
 ```
