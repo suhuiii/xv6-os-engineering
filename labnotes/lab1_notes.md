@@ -120,9 +120,9 @@ what can we tell from here?
 * The first instruction is a jmp instruction which jumps to CS = `0xF000` and IP = `0xE05B`
 
 how does the PC know to get to `0xffff0`?  
-in short, that address is calculated by using the CS and IP values of `0xf000` and `0xfff0` using the formula * physical address =  16 *segment + offset *. This gives `0xffff0` which is 16 bits before the end of the BIOS. This is known as the **COLD RESET VECTOR** 
+in short, that address is calculated by using the CS and IP values of `0xf000` and `0xfff0` using the formula * physical address =  16 \* segment + offset. * This gives `0xffff0` which is 16 bits before the end of the BIOS. This is known as the **COLD RESET VECTOR** 
 
-The first instruction si a jump, and we can see from the CS:IP values that it will jump to instruction `0xFE05B`, which is earlier in the BIOS.
+The first instruction is a jump, and we can see from the CS:IP values that it will jump to instruction `0xFE05B`, which is earlier in the BIOS.
 
 Executing the next instruction will help us verify if that is true:
 ```
