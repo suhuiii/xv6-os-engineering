@@ -165,7 +165,7 @@ clearing of interrupt flags here prevent hardware interrupts
 0xfd16d:	or     $0x2,%al
 0xfd16f:	out    %al,$0x92 
 ```
-`0x92` here is the PS/2 system control port A. the or instruction sets the bit 1 to 1. This is known as the A20 line which is a (work around of sorts to ensure legacy compatibility)[http://www.independent-software.com/writing-your-own-toy-operating-system-enabling-the-a20-line/]
+`0x92` here is the PS/2 system control port A. the or instruction sets the bit 1 to 1. This is known as the A20 line which is a [work around of sorts to ensure legacy compatibility](http://www.independent-software.com/writing-your-own-toy-operating-system-enabling-the-a20-line/)
 ```
 0xfd171:	lidtw  %cs:0x6ab8 // loads the IDTR - interrupt vector table register
 0xfd177:	lgdtw  %cs:0x6a74 // set Global descriptor table register to 0x6a74
@@ -203,9 +203,9 @@ This part of the code is required to reload the segment registers inorder to com
 
 - Then, it reads the kernel from the hard disk by directly accessing the IDE disk device registers via the x86's special I/O instructions.
 
-> Exercise 3
-> Take a look at the lab tools guide, especially the section on GDB commands. Even if you're familiar with GDB, this includes some esoteric GDB commands that are useful for OS work.
-Set a breakpoint at address 0x7c00, which is where the boot sector will be loaded. Continue execution until that breakpoint. Trace through the code in boot/boot.S, using the source code and the disassembly file obj/boot/boot.asm to keep track of where you are. Also use the x/i command in GDB to disassemble sequences of instructions in the boot loader, and compare the original boot loader source code with both the disassembly in obj/boot/boot.asm and GDB.
+> Exercise 3  
+> Take a look at the lab tools guide, especially the section on GDB commands. Even if you're familiar with GDB, this includes some esoteric GDB commands that are useful for OS work.  
+> Set a breakpoint at address 0x7c00, which is where the boot sector will be loaded. Continue execution until that breakpoint. Trace through the code in boot/boot.S, using the source code and the disassembly file obj/boot/boot.asm to keep track of where you are. Also use the x/i command in GDB to disassemble sequences of instructions in the boot loader, and compare the original boot loader source code with both the disassembly in obj/boot/boot.asm and GDB.  
 > Trace into bootmain() in boot/main.c, and then into readsect(). Identify the exact assembly instructions that correspond to each of the statements in readsect(). Trace through the rest of readsect() and back out into bootmain(), and identify the begin and end of the for loop that reads the remaining sectors of the kernel from the disk. Find out what code will run when the loop is finished, set a breakpoint there, and continue to that breakpoint. Then step through the remainder of the boot loader.
 
 
@@ -274,7 +274,7 @@ the entry point to the kernel is reached by executing the following statement
 ```
 this is a pointer to memory address `*0x10018`, which contains the value `0x0010000c`. The kernel thus starts at `0x10000c`
 
-4. How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?
+** Question 4.** How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?
 
 The boot loader reads the number of program headers in the ELF header and calculates `eph`. which is the number of program segments to load.  
 
