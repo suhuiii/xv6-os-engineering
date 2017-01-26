@@ -139,25 +139,47 @@ The next couple of instructions are :
 0xfe05b:	cmpl   $0x0,%cs:0x6ac8 //compare immediate value of 0x0 with value of memory address 
 0xfe062:	jne    0xfd2e1 //jump if ZF is 0 i.e. result in memory address is not 0
 0xfe066:	xor    %dx,%dx // clear the data register
-0xfe068:	mov    %dx,%ss // set value of ss
-0xfe06a:	mov    $0x7000,%esp // set value of esp
-0xfe070:	mov    $0xf34c2,%edx // set value of data register
+0xfe068:	mov    %dx,%ss // set value of ss to 0
+0xfe06a:	mov    $0x7000,%esp // set value of esp to 0x7000. this is the boot sector
+0xfe070:	mov    $0xf34c2,%edx // set value of data register to 0xf34c2 - DMA Controller setup
 0xfe076:	jmp    0xfd15c // unconditional jump
+```
+cmpl here seems to be ensuring that a certain memory address is 0. not sure why, perhaps it is the Post-On-System-Test (POST)? It then clears the dx,ss register and presets the stack pointer and dx
+
+```
 0xfd15c:	mov    %eax,%ecx //mov value in accumulator register to count register
 0xfd15f:	cli    // clear interrupt flag - disables external interrupts until flag is set
 0xfd160:	cld    // clear direction flag - all subsequent string operation increment index registers esi and edi
+```
+clearing of interrupt flags here prevent hardware interrupts 
+
+```
 0xfd161:	mov    $0x8f,%eax // set accumulator register
-0xfd167:	out    %al,$0x70 //outputs data from register to port $0x70
-0xfd169:	in     $0x71,%al //
-0xfd16b:	in     $0x92,%al
+0xfd167:	out    %al,$0x70 //reads from port $0x70 into register al
+0xfd169:	in     $0x71,%al //writes to port $0x71 from register al
+```
+`0x70` is the NMI enable bit, while `0x71` is the real time clock. what we are doing here is disabling NMI (non-maskable-interrupt) 
+
+```
+0xfd16b:	in     $0x92,%al  // read value of port $0x92 to al
 0xfd16d:	or     $0x2,%al
-0xfd16f:	out    %al,$0x92
-0xfd171:	lidtw  %cs:0x6ab8
-0xfd177:	lgdtw  %cs:0x6a74
-0xfd17d:	mov    %cr0,%eax
+0xfd16f:	out    %al,$0x92 
+```
+`0x92` here is the PS/2 system control port A. the or instruction sets the bit 1 to 1. This is known as the A20 line which is a (work around of sorts to ensure legacy compatibility)[http://www.independent-software.com/writing-your-own-toy-operating-system-enabling-the-a20-line/]
+```
+0xfd171:	lidtw  %cs:0x6ab8 // loads the IDTR - interrupt vector table register
+0xfd177:	lgdtw  %cs:0x6a74 // set Global descriptor table register to 0x6a74
+```
+The interrupt desciptor table is the protected mode counterpart to the Real Mode Interrupt Vector Table. the GDT contains entries telling the CPI about memory segments. The CPU uses these to access and control memory as well as execute interrupt calls. 
+```
+0xfd17d:	mov    %cr0,%eax 
 0xfd180:	or     $0x1,%eax
 0xfd184:	mov    %eax,%cr0
-0xfd187:	ljmpl  $0x8,$0xfd18f
+```
+the code above sets the lowest bit of `CR0` which is the start protection bit for control register 0.This enables protected mode.
+
+```
+0xfd187:	ljmpl  $0x8,$0xfd18f // protected mode lomg jump
 0xfd18f: 	mov $ 0x10,% eax 
 0xfd194: 	mov % eax,% ds 
 0xfd196: 	mov % eax,% es 
@@ -166,3 +188,12 @@ The next couple of instructions are :
 0xfd19c: 	mov % eax,% gs 
 
 ```  
+This part of the code is required to reload the segment registers inorder to complete the process of loading a new GDT.
+
+## Part2: Boot loader
+
+
+
+## Links
+http://wiki.osdev.org/Global_Descriptor_Table
+
