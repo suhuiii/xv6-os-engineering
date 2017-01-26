@@ -192,8 +192,89 @@ This part of the code is required to reload the segment registers inorder to com
 
 ## Part2: Boot loader
 
+*Define sector:* a disk's minimum transfer granularity. Flobby and harddisks are divided into sectors of 512 bytes. Every read or write operation must be one or more sectors in size and aligned on a sector boundary. 
+
+*Define Boot sector:* first sector of a bootable disk, i.e. where the boot loader code resides. 
+
+The BIOS loads the boot sector into memory at physical address 0x7c00 through ox7dff (arbitary addresses but fixed and standardized for PCs)
+
+it switches the processor from real mode to 32-bit protected mode (protected mode is where software can access memory above 1MB in the processor's physical space)
+
+Then, it reads the kernel from the hard disk by directly accessing the IDE disk device registers via the x86's special I/O instructions.
+
+Let's set step through boot.S and answer the following questions
+1. At what point does the processor start executing 32-bit code? What exactly causes the switch from 16- to 32- bit mode?
+
+```
+   0x7c1e:	lgdtw  0x7c64		// load global descriptor table register to $gdtdesc
+   0x7c23:	mov    %cr0,%eax	// sets lowest bit of CR0 to 1 to enable protected mode
+   0x7c26:	or     $0x1,%eax	//
+   0x7c2a:	mov    %eax,%cr0	//
+   0x7c2d:	ljmp   $0x8,$0x7c32	// far jump to $protcseg which sets %cs to the code descriptor entry in gdt - This is one of the only ways to change the cs register which needs to be done to activate protected mode. (the other ways to change cs are far call, far return and interrupt return).
+```
+
+2. What is the last instruction of the boot loader executed, and what is the first instruction of the kernel it just loaded?
+
+Boot.S calls bootmain.c  which is responsible for loading a kernel from an IDE disk into memory and executing it.
+
+What's the kernel? This is an ELF format binary consisting of an ELF file header `elfhdr` followed by a sequence of program section headers `proghdr`. For a start, bootmain loads 4096 bytes of the ELF file (1 page) to get access to the headers. 
+```
+// read 1st page off disk
+readseg((uint32_t) ELFHDR, SECTSIZE*8, 0); //SECTSIZE is defined as a constant for value 512
+
+```
+ The binary header should start with `0x7F`, 'E', 'L','F', in other words '0x7f', '0x45', '0x4C', '0x46', which is verified in the following:
+```
+0x7d2e:	cmpl   $0x464c457f,0x10000
+
+```
+
+It then continues to load program segments of the ELF into memory (from data in the ELF header), until the entire kernel is loaded into memory. It  then call the entry point as stated in the ELF header.
+
+*The last instruction of the bootloader is thus to call the ELF header*  
+```
+// call the entry point from the ELF header
+// note: does not return!
+((void (*)(void)) (ELFHDR->e_entry))();
+7d6b:       ff 15 18 00 01 00       call   *0x10018
+
+```
+
+what happens after the call is made?
+```
+.globl entry
+entry:
+        movw    $0x1234,0x472                   # warm boot - first instruction in kernel
+f0100000:       02 b0 ad 1b 00 00       add    0x1bad(%eax),%dh
+f0100006:       00 00                   add    %al,(%eax)
+f0100008:       fe 4f 52                decb   0x52(%edi)
+f010000b:       e4                      .byte 0xe4
+
+f010000c <entry>:
+f010000c:       66 c7 05 72 04 00 00    movw   $0x1234,0x472
+
+``` 	
+
+
+3. Where is the first instruction of the kernel?
+
+the entry point to the kernel is reached by executing the following statement
+```
+0x7d6b:	call   *0x10018
+(gdb) x/x 0x10018
+0x10018:	0x0010000c
+
+```
+this is a pointer to memory address `/*0x10018`, which contains the value `0x0010000c`. The kernel thus starts at 0x100000
+
+4. How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?
+
+The boot loader reads the number of program headers in the ELF header and calculates `eph`. which is the number of program segments to load.  
+
+For each segment, it will calculate the number of sectors from the byte offset and add 1 (because kernel starts at disk sector 1).
 
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table
+
 
