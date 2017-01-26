@@ -85,7 +85,7 @@ iBit   Label    Desciption
 +------------------+  <- 0x00000000
 ```
 
-## ROM BIOS
+## Part 1: PC Bootstrap and ROM BIOS
 We investigate how a computer boots here.  
 
 When we run `make qemu-gdb` and then `gdb`, QEMU starts but stops just before processor executes the first instruction.  
@@ -196,14 +196,22 @@ This part of the code is required to reload the segment registers inorder to com
 
 *Define Boot sector:* first sector of a bootable disk, i.e. where the boot loader code resides. 
 
-The BIOS loads the boot sector into memory at physical address 0x7c00 through ox7dff (arbitary addresses but fixed and standardized for PCs)
+### Steps
+- The BIOS loads the boot sector into memory at physical address 0x7c00 through ox7dff (arbitary addresses but fixed and standardized for PCs)
 
-it switches the processor from real mode to 32-bit protected mode (protected mode is where software can access memory above 1MB in the processor's physical space)
+- It switches the processor from real mode to 32-bit protected mode (protected mode is where software can access memory above 1MB in the processor's physical space)
 
-Then, it reads the kernel from the hard disk by directly accessing the IDE disk device registers via the x86's special I/O instructions.
+- Then, it reads the kernel from the hard disk by directly accessing the IDE disk device registers via the x86's special I/O instructions.
 
-Let's set step through boot.S and answer the following questions
-1. At what point does the processor start executing 32-bit code? What exactly causes the switch from 16- to 32- bit mode?
+> Exercise 3
+> Take a look at the lab tools guide, especially the section on GDB commands. Even if you're familiar with GDB, this includes some esoteric GDB commands that are useful for OS work.
+Set a breakpoint at address 0x7c00, which is where the boot sector will be loaded. Continue execution until that breakpoint. Trace through the code in boot/boot.S, using the source code and the disassembly file obj/boot/boot.asm to keep track of where you are. Also use the x/i command in GDB to disassemble sequences of instructions in the boot loader, and compare the original boot loader source code with both the disassembly in obj/boot/boot.asm and GDB.
+> Trace into bootmain() in boot/main.c, and then into readsect(). Identify the exact assembly instructions that correspond to each of the statements in readsect(). Trace through the rest of readsect() and back out into bootmain(), and identify the begin and end of the for loop that reads the remaining sectors of the kernel from the disk. Find out what code will run when the loop is finished, set a breakpoint there, and continue to that breakpoint. Then step through the remainder of the boot loader.
+
+
+Let's set step through `boot.S` and answer the following questions:
+
+**Question 1.** At what point does the processor start executing 32-bit code? What exactly causes the switch from 16- to 32- bit mode?
 
 ```
    0x7c1e:	lgdtw  0x7c64		// load global descriptor table register to $gdtdesc
@@ -213,7 +221,7 @@ Let's set step through boot.S and answer the following questions
    0x7c2d:	ljmp   $0x8,$0x7c32	// far jump to $protcseg which sets %cs to the code descriptor entry in gdt - This is one of the only ways to change the cs register which needs to be done to activate protected mode. (the other ways to change cs are far call, far return and interrupt return).
 ```
 
-2. What is the last instruction of the boot loader executed, and what is the first instruction of the kernel it just loaded?
+**Question 2.** What is the last instruction of the boot loader executed, and what is the first instruction of the kernel it just loaded?
 
 Boot.S calls bootmain.c  which is responsible for loading a kernel from an IDE disk into memory and executing it.
 
@@ -255,8 +263,7 @@ f010000c:       66 c7 05 72 04 00 00    movw   $0x1234,0x472
 
 ``` 	
 
-
-3. Where is the first instruction of the kernel?
+**Question 3.** Where is the first instruction of the kernel?
 
 the entry point to the kernel is reached by executing the following statement
 ```
@@ -265,7 +272,7 @@ the entry point to the kernel is reached by executing the following statement
 0x10018:	0x0010000c
 
 ```
-this is a pointer to memory address `/*0x10018`, which contains the value `0x0010000c`. The kernel thus starts at 0x100000
+this is a pointer to memory address `*0x10018`, which contains the value `0x0010000c`. The kernel thus starts at `0x10000c`
 
 4. How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?
 
@@ -273,8 +280,11 @@ The boot loader reads the number of program headers in the ELF header and calcul
 
 For each segment, it will calculate the number of sectors from the byte offset and add 1 (because kernel starts at disk sector 1).
 
+##
 
 ## Links
-http://wiki.osdev.org/Global_Descriptor_Table
-
+http://wiki.osdev.org/Global_Descriptor_Table  
+http://www.cnblogs.com/fatsheep9146/p/5115086.html  
+https://www.cs.columbia.edu/~junfeng/11sp-w4118/lectures/boot.pdf  
+http://wiki.osdev.org/CMOS  
 
