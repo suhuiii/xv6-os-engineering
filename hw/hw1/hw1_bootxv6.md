@@ -170,4 +170,4 @@ The non-zero parts:
 
 
 ## Links consulted
-(Explanation of ESP, EBP, EIP)[http://unixwiz.net/techtips/win32-callconv-asm.html]
+[Explanation of ESP, EBP, EIP](http://unixwiz.net/techtips/win32-callconv-asm.html)
