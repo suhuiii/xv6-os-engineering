@@ -274,13 +274,13 @@ the entry point to the kernel is reached by executing the following statement
 ```
 this is a pointer to memory address `*0x10018`, which contains the value `0x0010000c`. The kernel thus starts at `0x10000c`
 
-** Question 4.** How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?
+**Question 4.** How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?
 
 The boot loader reads the number of program headers in the ELF header and calculates `eph`. which is the number of program segments to load.  
 
 For each segment, it will calculate the number of sectors from the byte offset and add 1 (because kernel starts at disk sector 1).
 
-##
+## Loading the Kernel
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table  
