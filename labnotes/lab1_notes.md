@@ -281,7 +281,7 @@ For each segment, it will calculate the number of sectors from the byte offset a
 
 ## Loading the Kernel
 
-Exercise 4 : explanation for [pointers.c](labnotes/pointers.c)
+Exercise 4 : explanation for [pointers.c](pointers.c)
 
 
 ## Links
