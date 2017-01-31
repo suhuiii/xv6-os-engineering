@@ -21,8 +21,7 @@ eip       instruction pointer
 cs        points at segment containing current program (used for IP)  
 ss        points at segment containing stack (used for SP)   
 ds        segment where variables are defined (used for MOV)   
-es        extra segment register (user defined)  
-fs        extra segment register (user defined)  
+es        extra segment register (user defined)
 gs        extra segment register (user defined)  
 
 
@@ -281,6 +280,9 @@ The boot loader reads the number of program headers in the ELF header and calcul
 For each segment, it will calculate the number of sectors from the byte offset and add 1 (because kernel starts at disk sector 1).
 
 ## Loading the Kernel
+
+Exercise 4 : explanation for [pointers.c](labnotes/pointers.c)
+
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table  
