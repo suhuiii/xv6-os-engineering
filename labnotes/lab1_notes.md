@@ -283,6 +283,68 @@ For each segment, it will calculate the number of sectors from the byte offset a
 
 Exercise 4 : explanation for [pointers.c](pointers.c)
 
+Full list of names, sizes and link addresses of all sections in the kernel executable:
+
+```
+$ objdump -h obj/kern/kernel
+
+obj/kern/kernel:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00001861  f0100000  00100000  00001000  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .rodata       00000714  f0101880  00101880  00002880  2**5
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .stab         000038d1  f0101f94  00101f94  00002f94  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  3 .stabstr      000018bb  f0105865  00105865  00006865  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .data         0000a300  f0108000  00108000  00009000  2**12
+                  CONTENTS, ALLOC, LOAD, DATA
+  5 .bss          00000644  f0112300  00112300  00013300  2**5
+                  ALLOC
+  6 .comment      00000032  00000000  00000000  00013300  2**0
+                  CONTENTS, READONLY
+
+```
+
+What we care about here is 
+- `.text` - program's executable instructions
+- `.rodata` - read only data e.g. ASCII string constants
+- `.data` - data section that holds program's initialized data (e.g. globals)
+  
+
+VMA vs LMA
+- VMA: link address (memory address from which section expects to execute)
+- LMA -load address (memory address where section should be loaded in memory)
+
+for `.text`, LMA is 0x00100000 - which we know is where the kernel is loaded.
+
+objdump for bootloader:
+```
+$ objdump -h obj/boot/boot.out
+
+obj/boot/boot.out:     file format elf32-i386
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000186  00007c00  00007c00  00000074  2**2
+                  CONTENTS, ALLOC, LOAD, CODE
+  1 .eh_frame     000000a8  00007d88  00007d88  000001fc  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .stab         00000720  00000000  00000000  000002a4  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  3 .stabstr      0000088f  00000000  00000000  000009c4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .comment      00000032  00000000  00000000  00001253  2**0
+                  CONTENTS, READONLY
+
+```
+
+for the boot sector, VMA and LMA are the same with a value of 0x7c00 which is the boot serctor's load address.
+
+
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table  
