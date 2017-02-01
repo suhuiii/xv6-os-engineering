@@ -342,9 +342,117 @@ Idx Name          Size      VMA       LMA       File off  Algn
 
 ```
 
-for the boot sector, VMA and LMA are the same with a value of 0x7c00 which is the boot serctor's load address.
+for the boot sector, VMA and LMA are the same with a value of 0x7c00 which is the boot sector's load address.
+
+if we trace through the first few instructions of the bootloader again, and change the VMA for the boot sector to a value of 0x7c06, the line that breaks is:
+```
+ljmp $PROT_MODE_CSEG, $protcseg
+//disassembled to
+0x7c2d:	ljmp   $0x8,$0x7c32 // original
+0x7c2f: ljmp   $0x8,$0x7c3a // when VMA changed to 0x7c06
+
+```
+
+Entry point for kernel:
+```
+objdump -f obj/kern/kernel
+
+obj/kern/kernel:     file format elf32-i386
+architecture: i386, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0x0010000c
+```
+
+>> Exercise 6:  
+>>  We can examine memory using GDB's x command. The GDB manual has full details, but for now, it is enough to know that the command x/Nx ADDR prints N words of memory at ADDR. (Note that both xs in the command are lowercase.) Warning: The size of a word is not a universal standard. In GNU assembly, a word is two bytes (the 'w' in xorw, which stands for word, means 2 bytes).
+
+When BIOS enters boot loader, memory is 0
+```
+(gdb) x/8x 0x00100000
+0x100000:	0x00000000	0x00000000	0x00000000	0x00000000
+0x100010:	0x00000000	0x00000000	0x00000000	0x00000000
+
+```
+When bootloader enters kernel, memory contains the instructions at the memory.
+```
+(gdb) x/8x 0x10000c
+0x10000c:	0x7205c766	0x34000004	0x0000b812	0x220f0011
+0x10001c:	0xc0200fd8	0x0100010d	0xc0220f80	0x10002fb8
+
+(gdb) x/8i 0x10000c
+=> 0x10000c:	movw   $0x1234,0x472
+   0x100015:	mov    $0x110000,%eax
+   0x10001a:	mov    %eax,%cr3
+   0x10001d:	mov    %cr0,%eax
+   0x100020:	or     $0x80010001,%eax
+   0x100025:	mov    %eax,%cr0
+   0x100028:	mov    $0xf010002f,%eax
+   0x10002d:	jmp    *%eax
+
+```
+
+These correspond to the code in disassembled `entry.S`
+
+>> Exercise 7
+
+>> Use QEMU and GDB to trace into the JOS kernel and stop at the movl %eax, %cr0. Examine memory at 0x00100000 and at 0xf0100000. Now, single step over that instruction using the stepi GDB command. Again, examine memory at 0x00100000 and at 0xf0100000. Make sure you understand what just happened.
+
+before stepping:
+```
+(gdb) x/8x 0x0010000c
+0x10000c:	0x7205c766	0x34000004	0x0000b812	0x220f0011
+0x10001c:	0xc0200fd8	0x0100010d	0xc0220f80	0x10002fb8
+(gdb) x/8x 0xf010000c
+0xf010000c <entry>:	0x00000000	0x00000000	0x00000000	0x00000000
+0xf010001c <entry+16>:	0x00000000	0x00000000	0x00000000	0x00000000
+```
+after stepping:
+```
+(gdb) x/8x 0x0010000c
+0x10000c:	0x7205c766	0x34000004	0x0000b812	0x220f0011
+0x10001c:	0xc0200fd8	0x0100010d	0xc0220f80	0x10002fb8
+(gdb) x/8x 0xf010000c
+0xf010000c <entry>:	0x7205c766	0x34000004	0x0000b812	0x220f0011
+0xf010001c <entry+16>:	0xc0200fd8	0x0100010d	0xc0220f80	0x10002fb8
+
+```
+Same contents - paging enabled.
+
+What is the first instruction after the new mapping is established that would fail to work properly if the mapping weren't in place? 
+
+`0x10002d:	jmp    *%eax` would cause a hardware exception as address is outside of RAM
+
+>> Exercise 8
+>> We have omitted a small fragment of code - the code necessary to print octal numbers using patterns of the form "%o". Find and fill in this code fragment.
+
+answer:
+```
+   case 'o':
+      num = getuint(&ap, lflag);
+      base = 8;
+      goto number;
+
+```
 
 
+Questions:
+>> Explain the interface between printf.c and console.c. Specifically, what function does console.c export? How is this function used by printf.c?
+
+`console.c` exports `cputchar`, `getchar` and `iscons`
+`printf.c` uses `cputchar` in `cprintf`->`vprintfmt'
+`printfmt.c` uses `vprintfmt` when `printfmt` is called
+
+
+>> Explain the following from console.c
+```
+if (crt_pos >= CRT_SIZE) {
+   int i;
+   memcpy(crt_buf, crt_buf + CRT_COLS, (CRT_SIZE - CRT_COLS) * sizeof(uint16_t));
+   for (i = CRT_SIZE - CRT_COLS; i < CRT_SIZE; i++)
+       crt_buf[i] = 0x0700 | ' ';
+   crt_pos -= CRT_COLS;
+}
+```
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table  
