@@ -363,8 +363,8 @@ EXEC_P, HAS_SYMS, D_PAGED
 start address 0x0010000c
 ```
 
->> Exercise 6:  
->>  We can examine memory using GDB's x command. The GDB manual has full details, but for now, it is enough to know that the command x/Nx ADDR prints N words of memory at ADDR. (Note that both xs in the command are lowercase.) Warning: The size of a word is not a universal standard. In GNU assembly, a word is two bytes (the 'w' in xorw, which stands for word, means 2 bytes).
+> Exercise 6:  
+>  We can examine memory using GDB's x command. The GDB manual has full details, but for now, it is enough to know that the command x/Nx ADDR prints N words of memory at ADDR. (Note that both xs in the command are lowercase.) Warning: The size of a word is not a universal standard. In GNU assembly, a word is two bytes (the 'w' in xorw, which stands for word, means 2 bytes).
 
 When BIOS enters boot loader, memory is 0
 ```
@@ -393,9 +393,9 @@ When bootloader enters kernel, memory contains the instructions at the memory.
 
 These correspond to the code in disassembled `entry.S`
 
->> Exercise 7
+> Exercise 7
 
->> Use QEMU and GDB to trace into the JOS kernel and stop at the movl %eax, %cr0. Examine memory at 0x00100000 and at 0xf0100000. Now, single step over that instruction using the stepi GDB command. Again, examine memory at 0x00100000 and at 0xf0100000. Make sure you understand what just happened.
+> Use QEMU and GDB to trace into the JOS kernel and stop at the movl %eax, %cr0. Examine memory at 0x00100000 and at 0xf0100000. Now, single step over that instruction using the stepi GDB command. Again, examine memory at 0x00100000 and at 0xf0100000. Make sure you understand what just happened.
 
 before stepping:
 ```
@@ -422,8 +422,8 @@ What is the first instruction after the new mapping is established that would fa
 
 `0x10002d:	jmp    *%eax` would cause a hardware exception as address is outside of RAM
 
->> Exercise 8
->> We have omitted a small fragment of code - the code necessary to print octal numbers using patterns of the form "%o". Find and fill in this code fragment.
+> Exercise 8
+> We have omitted a small fragment of code - the code necessary to print octal numbers using patterns of the form "%o". Find and fill in this code fragment.
 
 answer:
 ```
@@ -443,7 +443,7 @@ Questions:
 `printfmt.c` uses `vprintfmt` when `printfmt` is called
 
 
->> Explain the following from console.c
+> Explain the following from console.c
 ```
 if (crt_pos >= CRT_SIZE) {
    int i;
@@ -453,6 +453,8 @@ if (crt_pos >= CRT_SIZE) {
    crt_pos -= CRT_COLS;
 }
 ```
+changes position of crt to next line when screen is full
+
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table  
