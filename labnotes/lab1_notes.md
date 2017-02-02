@@ -455,6 +455,89 @@ if (crt_pos >= CRT_SIZE) {
 ```
 changes position of crt to next line when screen is full
 
+> Trace the execution of the following code step-by-step:
+```
+int x = 1, y = 3, z = 4;
+cprintf("x %d, y %x, z %d\n", x, y, z);
+```
+
+> In the call to cprintf(), to what does fmt point? To what does ap point?  
+I added lines in monitor.c, resulting in 
+```
+cprintf (fmt=0xf0101b2e "x %d, y %x, z %d\n") at kern/printf.c:27
+(gdb) x/4x 0xf0101b2e
+0xf0101b2e:	0x6425 2078	0x2079 202c	0x202c7825	0x6425 207a
+in ascii:     d %  SP x   SP y SP ,   SP, x %     d %  SP z
+```
+thus fmt points to the format string.
+```
+=> 0xf01008e2 <vcprintf>:	push   %ebp
+vcprintf (fmt=0xf0101b2e "x %d, y %x, z %d\n", ap=0xf010ff64 "\001")
+    at kern/printf.c:18
+(gdb) x/4x 0xf010ff64
+0xf010ff64:	0x00000001	0x00000003	0x00000004	0xf0101cac
+```
+ap points to the value of the variables after fmt
+
+> List (in order of execution) each call to cons_putc, va_arg, and vcprintf. For cons_putc, list its argument as well. For va_arg, list what ap points to before and after the call. For vcprintf list the values of its two arguments.
+
+```
+vcprintf (fmt=0xf0101b2e "x %d, y %x, z %d\n", ap=0xf010ff64 "\001")
+    at kern/printf.c:18
+cons_putc (c=120) //x
+cons_putc (c=32)  //space
+Hardware access (read/write) watchpoint 4: *ap
+Old value = 1 '\001'
+New value = 3 '\003'
+cons_putc (c=49)  //1
+cons_putc (c=44)  //,
+cons_putc (c=32)  //space
+cons_putc (c=121) //y
+cons_putc (c=32)  //space
+Hardware access (read/write) watchpoint 4: *ap
+Old value = 3 '\003'
+New value = 4 '\004'
+cons_putc (c=51)  //3
+cons_putc (c=44)  //,
+cons_putc (c=32)  //space
+cons_putc (c=122) //z
+cons_putc (c=32)  //space
+Hardware access (read/write) watchpoint 4: *ap
+Old value = 4 '\004'
+New value = -84 '\254'
+print ap
+$7 = (va_list) 0xf010ff70 "\254\034\020\360\214\377\020\360\034\030\020\360\310\377\020\360\034\030\020\360\244\377\020\360\270\377", <incomplete sequence \360>
+cons_putc (c=52)  //4
+cons_putc (c=10) //newline
+```
+
+> Run the following code.
+```
+    unsigned int i = 0x00646c72;
+    cprintf("H%x Wo%s", 57616, &i);
+```
+> What is the output? Explain how this output is arrived at in the step-by-step manner of the previous exercise. Here's an ASCII table that maps bytes to characters.
+
+57616 is `0xe110`, so the first word prints as `He110`.
+for int i, this resolves to a string according to the formatter. Thus,
+00 maps to /0 string terminator
+64 maps to d
+6c maps to l
+72 maps to r
+so the second word prints as World
+> The output depends on that fact that the x86 is little-endian. If the x86 were instead big-endian what would you set i to in order to yield the same output? Would you need to change 57616 to a different value?
+i should be changed to 0x716c6400
+no change to 57616
+
+> Q: In the following code, what is going to be printed after 'y='? (note: the answer is not a specific value.) Why does this happen?
+```
+cprintf("x=%d y=%d", 3);
+```
+%`d` will point to the 4 bytes (size of an int) above 3 in the stack
+
+> Q: Let's say that GCC changed its calling convention so that it pushed arguments on the stack in declaration order, so that the last argument is pushed last. How would you have to change cprintf or its interface so that it would still be possible to pass it a variable number of arguments?
+
+
 
 ## Links
 http://wiki.osdev.org/Global_Descriptor_Table  
