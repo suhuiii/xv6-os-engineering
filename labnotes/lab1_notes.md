@@ -537,6 +537,104 @@ cprintf("x=%d y=%d", 3);
 
 > Q: Let's say that GCC changed its calling convention so that it pushed arguments on the stack in declaration order, so that the last argument is pushed last. How would you have to change cprintf or its interface so that it would still be possible to pass it a variable number of arguments?
 
+change va_arg instead?
+
+## The stack
+
+> Exercise 9. 
+> Determine where the kernel initializes its stack, and exactly where in memory its stack is located. How does the kernel reserve space for its stack? And at which "end" of this reserved area is the stack pointer initialized to point to?
+
+```
+        # Clear the frame pointer register (EBP)
+        # so that once we get into debugging C code,
+        # stack backtraces will be terminated properly.
+        movl    $0x0,%ebp                       # nuke frame pointer
+f010002f:       bd 00 00 00 00          mov    $0x0,%ebp
+
+        # Set the stack pointer
+        movl    $(bootstacktop),%esp
+f0100034:       bc 00 00 11 f0          mov    $0xf0110000,%esp // stack at 0xf0110000
+```
+stack pointer points to bootstacktop (highest address in stack).
+space is reserved by the following lines:
+```
+.data
+###################################################################
+# boot stack
+###################################################################
+        .p2align        PGSHIFT         # force page alignment
+        .globl          bootstack
+bootstack:
+        .space          KSTKSIZE
+        .globl          bootstacktop
+bootstacktop:
+
+```
+> Exercise 10. 
+> To become familiar with the C calling conventions on the x86, find the address of the test_backtrace function in obj/kern/kernel.asm, set a breakpoint there, and examine what happens each time it gets called after the kernel starts. How many 32-bit words does each recursive nesting level of test_backtrace push on the stack, and what are those words?
+per call of test_backtrace:
+
+```
+(gdb) b *0xf0100040
+Note: breakpoint 1 also set at pc 0xf0100040.
+Breakpoint 2 at 0xf0100040: file kern/init.c, line 13.
+(gdb) c
+Continuing.
+The target architecture is assumed to be i386
+=> 0xf0100040 <test_backtrace>:	push   %ebp
+
+Breakpoint 1, test_backtrace (x=5) at kern/init.c:13
+13	{
+(gdb) i r
+eax            0x0	0
+ecx            0x3d4	980
+edx            0x3d5	981
+ebx            0x10094	65684
+esp            0xf010ffdc	0xf010ffdc
+ebp            0xf010fff8	0xf010fff8
+esi            0x10094	65684
+edi            0x0	0
+eip            0xf0100040	0xf0100040 <test_backtrace>
+eflags         0x46	[ PF ZF ]
+cs             0x8	8
+ss             0x10	16
+ds             0x10	16
+es             0x10	16
+fs             0x10	16
+gs             0x10	16
+(gdb) c
+Continuing.
+=> 0xf0100040 <test_backtrace>:	push   %ebp
+
+Breakpoint 1, test_backtrace (x=4) at kern/init.c:13
+13	{
+(gdb) i r
+eax            0x4	4
+ecx            0x3d4	980
+edx            0x3d5	981
+ebx            0x5	5
+esp            0xf010ffbc	0xf010ffbc
+ebp            0xf010ffd8	0xf010ffd8
+esi            0x10094	65684
+edi            0x0	0
+eip            0xf0100040	0xf0100040 <test_backtrace>
+eflags         0x92	[ AF SF ]
+cs             0x8	8
+ss             0x10	16
+ds             0x10	16
+es             0x10	16
+fs             0x10	16
+gs             0x10	16
+```
+`%esp` differs by 0x20 - a word is 4 bytes, which means that 8 words were pushed in
+
+what is pushed in:
+1. return address
+2. ebp
+3. ebx
+4. eax
+5. 4 words of some data
+
 
 
 ## Links
