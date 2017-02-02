@@ -128,6 +128,7 @@ lpt_putc(int c)
 static unsigned addr_6845;
 static uint16_t *crt_buf;
 static uint16_t crt_pos;
+static uint16_t color = 0x0700;
 
 static void
 cga_init(void)
@@ -156,8 +157,6 @@ cga_init(void)
 	crt_buf = (uint16_t*) cp;
 	crt_pos = pos;
 }
-
-
 
 static void
 cga_putc(int c)
@@ -316,14 +315,10 @@ static int
 kbd_proc_data(void)
 {
 	int c;
-	uint8_t stat, data;
+	uint8_t data;
 	static uint32_t shift;
 
-	stat = inb(KBSTATP);
-	if ((stat & KBS_DIB) == 0)
-		return -1;
-	// Ignore data from mouse.
-	if (stat & KBS_TERR)
+	if ((inb(KBSTATP) & KBS_DIB) == 0)
 		return -1;
 
 	data = inb(KBDATAP);
@@ -354,8 +349,6 @@ kbd_proc_data(void)
 			c += 'a' - 'A';
 	}
 
-	// Process special keys
-	// Ctrl-Alt-Del: reboot
 	if (!(~shift & (CTL | ALT)) && c == KEY_DEL) {
 		cprintf("Rebooting!\n");
 		outb(0x92, 0x3); // courtesy of Chris Frost

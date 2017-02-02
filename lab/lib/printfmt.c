@@ -18,6 +18,8 @@
  * so that -E_NO_MEM and E_NO_MEM are equivalent.
  */
 
+int color = 0x0700;
+
 static const char * const error_string[MAXERROR] =
 {
 	[E_UNSPECIFIED]	= "unspecified error",
@@ -75,6 +77,22 @@ getint(va_list *ap, int lflag)
 		return va_arg(*ap, int);
 }
 
+int set_color(const int clr){
+        
+	switch(clr){ 
+		case 0 : return 0; //black
+                case 1 : return  4; //red
+                case 2 : return  2; //green
+                case 3 : return  6; //yellow
+                case 4 : return  1; //blue
+                case 5 : return  5; //magenta
+		case 6 : return  3; //cyan
+                default: return  7;//white
+         
+        }
+	
+}
+
 
 // Main function to format and print a string.
 void printfmt(void (*putch)(int, void*), void *putdat, const char *fmt, ...);
@@ -85,14 +103,35 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 	register const char *p;
 	register int ch, err;
 	unsigned long long num;
-	int base, lflag, width, precision, altflag;
+	int base, lflag, width, precision, altflag, c_num;
 	char padc;
 
 	while (1) {
 		while ((ch = *(unsigned char *) fmt++) != '%') {
 			if (ch == '\0')
 				return;
-			putch(ch, putdat);
+			else if (ch =='['){
+				ch = *(unsigned char *)fmt++;
+				while(ch!='m'){
+					c_num = 0;
+					while(ch >='0' && ch <= '9'){
+					    c_num = c_num * 10 + ch - '0';
+					    ch = *(unsigned char *) fmt++;
+					}
+					if(c_num >=30 && c_num <38){
+					    color &= 0xF0FF;
+					    color |= set_color(c_num-30) <<8;
+					}else if (c_num >= 40 && c_num <48){
+					    color &= 0x0FFF;
+					    color |= set_color(c_num-40) <<12;
+					}
+					if(ch == ';'){
+						ch = *(unsigned char *) fmt++;
+					}
+				}
+			}else{
+				putch(ch | color, putdat);
+			}
 		}
 
 		// Process a %-escape sequence
@@ -157,8 +196,9 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 
 		// character
 		case 'c':
-			putch(va_arg(ap, int), putdat);
+			putch(va_arg(ap, int) | color, putdat);
 			break;
+
 
 		// error message
 		case 'e':
@@ -177,14 +217,14 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 				p = "(null)";
 			if (width > 0 && padc != '-')
 				for (width -= strnlen(p, precision); width > 0; width--)
-					putch(padc, putdat);
+					putch(padc | color, putdat);
 			for (; (ch = *p++) != '\0' && (precision < 0 || --precision >= 0); width--)
 				if (altflag && (ch < ' ' || ch > '~'))
-					putch('?', putdat);
+					putch('?' | color, putdat);
 				else
-					putch(ch, putdat);
+					putch(ch | color, putdat);
 			for (; width > 0; width--)
-				putch(' ', putdat);
+				putch(' ' | color, putdat);
 			break;
 
 		// (signed) decimal
@@ -206,10 +246,9 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 		// (unsigned) octal
 		case 'o':
 			// Replace this with your code.
-			putch('X', putdat);
-			putch('X', putdat);
-			putch('X', putdat);
-			break;
+			num = getuint(&ap, lflag);
+			base = 8;
+			goto number;
 
 		// pointer
 		case 'p':

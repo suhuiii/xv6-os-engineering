@@ -28,5 +28,3 @@ target remote localhost:26000
 # for instructions on building GDB with ELF support.
 echo + symbol-file obj/kern/kernel\n
 symbol-file obj/kern/kernel
-
-add-auto-load-safe-path ~/src/gdb
