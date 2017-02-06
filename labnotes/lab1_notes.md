@@ -635,6 +635,8 @@ what is pushed in:
 4. eax
 5. 4 words of some data
 
+> exercise 10 and 11 - implement backtrace
+[done here](lab/kern/monitor.c)
 
 
 ## Links
