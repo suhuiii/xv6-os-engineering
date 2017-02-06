@@ -14,4 +14,10 @@ In this homework, we implement exec, redirection and pipes in a xv6 shell.
 [shell code in here] (hw/hw1/shell)
 
 ## [Lab1: Booting a PC](https://pdos.csail.mit.edu/6.828/2016/labs/lab1/)
-Date: 24 Jan 2016  
+Date: 24 Jan 2016 - 6 Feb 2015
+[Logs written in MD] (labnotes/lab1_notes.md)
+
+## [HW: syscall](https://pdos.csail.mit.edu/6.828/2016/homework/xv6-syscall.html)
+Date: 6 Feb 2015
+[Logs written in MD] (hw/hw2/hw2_syscall.md)
+[date code in here] (hw/hw2/source)
